@@ -1,9 +1,16 @@
 <!DOCTYPE html>
-<button class="search">SEARCH</button>
-<button class="update">SEARCH</button>
-<form><input type="text" value="10" id="msg" ></form>
-<svg width="1400" height="500"></svg>
-<script src="https://d3js.org/d3.v4.min.js"></script>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Kevin Bacon Quandaries</title>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <link rel="stylesheet" href="forcelayout.css">
+</head>
+<body>
+<div class="controls">
+  <button class="search">SEARCH</button>
+  <form><input type="text" value="10" id="msg" ></form>
+</div>
 <script>
 
 d3.selectAll("button.search")
@@ -11,7 +18,7 @@ d3.selectAll("button.search")
     .on("click", function() {
         var input = getInput();
         var data = getData(input);
-        updateData(selected, input);
+        updateData(data);
         restart();
     });
 
@@ -21,21 +28,51 @@ function getInput() {
 };
 
 function getData(input) {
-    return input
+    var node_type;
+    var link_type;
+    var meh = Math.round(Math.random()*5);
+    if (meh < 2) {
+        node_type = 'actor';
+        link_type = 'movie';
+    } else {
+        node_type = 'movie';
+        link_type = 'actor';
+    }
+    var node = {id: Number(input), type: node_type}
+
+    no_of_links = Math.round(Math.random()*5)
+    var links = []
+    for (i = 0; i < no_of_links; i++) {
+        links.push({id: Math.round(Math.random()*10), type: link_type})
+    }
+    data = { node: node,
+              links : links
+            }
+    return data
 };
 
-function updateData(source, target) {
-      var node = {id: target};
-      selected = node;
-      nodes.push(node)
-      links.push({source: source, target: node});
-      }
+function updateData(data) {
+    console.log(data);
+    nodes.push(data.node);
+    for (i = 0; i < data.links.length; i++) {
+        for (j = 0; j < nodes.length; j++) {
+            if (data.links[i].id == nodes[j].id && data.links[i].type == nodes[j].type) {
+                links.push({source: data.node, target:  nodes[j] })
+            }
+        }
+    }
+    console.log(links);
+    console.log(nodes);
+  }
 
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height")
 
-var selected = { id: "Romeo + Juliet" },
+var svg = d3.select("body")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", "100%");
+
+
+var selected = { id: 1, type: 'movie', fx: 100 },
     nodes = [ selected ];
     links = [];
 
@@ -45,19 +82,18 @@ var simulation = d3.forceSimulation(nodes)
     .alphaTarget(1)
     .on("tick", ticked);
 
-var g = svg.append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"),
+var g = svg.append("g").attr("transform", "translate(650,300)"),
     link = g.append("g").attr("stroke", "#000").attr("stroke-width", 1.5).selectAll(".link"),
     node = g.append("g").attr("stroke", "#fff").attr("stroke-width", 1.5).selectAll(".node");
 
 restart();
-
 
 function restart() {
 
   // Apply the general update pattern to the nodes.
   node = node.data(nodes, function(d) { return d.id;});
   node.exit().remove();
-  node = node.enter().append("circle").attr("fill", function(d) { return "black"; }).attr("r", 8).merge(node)
+  node = node.enter().append("circle").attr("fill", function(d) { if (d.type == 'movie') {return "red"; } else {return "black"; }}).attr("r", 8).merge(node)
       .call(d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
@@ -98,4 +134,7 @@ function dragged(d) {
     d.fy = d3.event.y;
 }
 
+data = getData(10)
+updateData(data)
+restart()
 </script>
